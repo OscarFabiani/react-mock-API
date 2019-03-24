@@ -15,10 +15,13 @@ body {
 }
 .ProductTable {
   border: 3px solid green;
+  width: 100%;
 }
 .SearchBar {
   border: 3px solid brown;
+  margin-bottom: 5px;
 }
 .FilterableProductTable {
-  border: 3px solid blue;
+  border: 2px solid blue;
+  padding: 5px;
 }
