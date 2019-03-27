@@ -2,99 +2,20 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
+
 const PRODUCTS = [
   {category: "Sporting Goods", price: "$49.99", stocked: true, name: "Football"},
   {category: "Sporting Goods", price: "$9.99", stocked: true, name: "Baseball"},
   {category: "Sporting Goods", price: "$29.99", stocked: false, name: "Basketball"},
   {category: "Electronics", price: "$99.99", stocked: true, name: "iPod Touch"},
-  {category: "Electronics", price: "$399.99", stocked: false, name: "iPhone 5"},
-  {category: "Electronics", price: "$199.99", stocked: true, name: "Nexus 7"}
+  {category: "Electronics", price: "$399.99", stocked: false, name: "iPhone"},
+  {category: "Electronics", price: "$199.99", stocked: true, name: "Nexus 7"},
+  {category: "Sporting Goods", price: "$19.99", stocked: true, name: "Soccerball"},
+  {category: "Electronics", price: "$299.99", stocked: true, name: "Galaxy"},
+
 ];
 
-/*
-//Example code
 
-class ProductCategoryRow extends React.Component {
-  render() {
-    const category = this.props.category;
-    return (
-      <tr className='ProductCategoryRow'>
-        <th colSpan='2'>
-          {category}
-        </th>
-      </tr>
-    )
-  }
-}
-
-class ProductRow extends React.Component {
-  render() {
-    const product = this.props.product;
-    const name = product.stocked ?
-      product.name :
-      <span style={{color: 'red'}}>{product.name}</span>
-    return (
-      <tr className='ProductRow'>
-        <td>{name}</td>
-        <td>{product.price}</td>
-      </tr>
-    )
-  }
-}
-
-class ProductTable extends React.Component {
-  render() {
-    const filterText = this.props.filterText;
-    const inStockOnly = this.props.inStockOnly;
-
-    let rows = [];
-    let lastCategory = null;
-
-    this.props.products.forEach((prod) => {
-      if (prod.name.indexOf(filterText) === -1 || (inStockOnly && !prod.stocked)) {
-        return;
-      }
-      if (prod.category !== lastCategory) {
-        rows = [...rows, <ProductCategoryRow category={prod.category} key={prod.category}/>];
-      }
-      rows = [...rows, <ProductRow product={prod} key={prod.name}/>];
-      lastCategory = prod.category;
-    });
-
-    return (
-      <table className='ProductTable'>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Price</th>
-          </tr>
-        </thead>
-        <tbody>{rows}</tbody>
-      </table>
-    )
-  }
-}
-
-class SearchBar extends React.Component {
-  render() {
-    const filterText = this.props.filterText;
-    const inStockOnly = this.props.inStockOnly;
-    const handleCheck = this.props.handleCheck;
-    const handleChange = this.props.handleChange;
-    return (
-      <form className='SearchBar'>
-        <input type='text' placeholder='Search...' value={filterText} onChange={handleChange}/>
-        <div>
-          <input type='checkbox' checked={inStockOnly} onChange={handleCheck}/>
-          <span>Only show products in stock</span>
-        </div>
-      </form>
-    );
-  }
-}
-*/
-
-//The following 4 functional components were rewritten from class components in the example code above.
 const ProductCategoryRow = ({category}) => {
   return (
     <tr className='ProductCategoryRow'>
@@ -114,27 +35,38 @@ const ProductRow = ({product}) => {
   )
 }
 
-const ProductTable = ({products, filterText, inStockOnly}) => {
-  let rows = [];
-  let lastCategory = null;
+//This is an alternate which adds an additional component (Items) which is then added to the ProductTable component. 
+//This alternative handles a JSON object that is not sorted by category. This alternative also involves passing props
+//down to the Items component which appears redundant.
+const Items =({category, products, filterText, inStockOnly}) => {
 
-  products.forEach((prod) => {
-    if (prod.name.indexOf(filterText) === -1 || (inStockOnly && !prod.stocked)) {
-      return;
+  const goods = products.filter(p => p.category === category);
+
+  const goodsRows = goods.map(p => {
+    if (p.name.indexOf(filterText) === -1 || (inStockOnly && !p.stocked)) {
+      return null;
     }
-    if (prod.category !== lastCategory) {
-      rows = [...rows,
-        <ProductCategoryRow
-          category={prod.category}
-          key={prod.category}/>];
-    }
-    rows = [...rows,
+    return (
       <ProductRow
-        product={prod}
-        key={prod.name}/>];
-    lastCategory = prod.category;
-  });
+        product={p}
+        key={p.name}/>
+    )
+  })
 
+  return (
+    goodsRows.every(p => p == null)
+    ? null
+    : (
+      <tbody>
+        <ProductCategoryRow
+          category={category}/>
+        {goodsRows}
+      </tbody>
+    )
+  )
+}
+
+const ProductTable =({products, filterText, inStockOnly}) => {
   return (
     <table className='ProductTable'>
       <thead>
@@ -143,7 +75,16 @@ const ProductTable = ({products, filterText, inStockOnly}) => {
           <th>Price</th>
         </tr>
       </thead>
-      <tbody>{rows}</tbody>
+      <Items
+        category='Sporting Goods'
+        products={products}
+        filterText={filterText}
+        inStockOnly={inStockOnly}/>
+      <Items
+        category='Electronics'
+        products={products}
+        filterText={filterText}
+        inStockOnly={inStockOnly}/>
     </table>
   )
 }
@@ -168,7 +109,7 @@ const SearchBar = ({filterText, inStockOnly, handleCheck, handleChange}) => {
 }
 
 class FilterableProductTable extends React.Component {
-  //NOTE: This follwing syntax of defining state outside of the constructor, omitting method binding, and using arrow
+  //NOTE: This following syntax of defining state outside of the constructor, omitting method binding, and using arrow
   //functions on methods are examples of 'class field/properties' which is an experimental(stage 3) syntax of of 03/2019. 
   state = {
     filterText: '',
@@ -206,62 +147,48 @@ class FilterableProductTable extends React.Component {
 ReactDOM.render(<FilterableProductTable products={PRODUCTS} />, document.getElementById('root'));
 
 
-/*
-This is an alternate which combines the ProductCategoryRow, ProductRow, and ProductTable components. Besides condensing
-components, which makes the components' JavaScript before the render look more like a Vanilla.JS project, this component
-assumes which categories are available, wheras the example component instead assumes the objects will be sorted by
-category.
-NOTE: I should test this component while  introducing state to see the difference between having seperate components
-instead of combining them.
 
-class ProductTable extends React.Component {
-  render() {
-    let sportingGoods = this.props.products.filter(p => p.category === 'Sporting Goods');
-    let electronics = this.props.products.filter(p => p.category === 'Electronics');
-    const sportingGoodsRows = sportingGoods.map(p => {
-      let name = p.stocked ? p.name : <span style={{color: 'red'}}>{p.name}</span>;
-      return (
-      <tr className='ProductRow' key={name}>
-        <td>{name}</td>
-        <td>{p.price}</td>
-      </tr>
-      )
-    })
-    const electronicsRows = electronics.map(p => {
-      let name = p.stocked ? p.name : <span style={{color: 'red'}}>{p.name}</span>;
-      return (
-      <tr className='ProductRow' key={name}>
-        <td>{name}</td>
-        <td>{p.price}</td>
-      </tr>
-      )
-    })
-    return (
-      <table className='ProductTable'>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Price</th>
-          </tr>
-        </thead>
-        <tbody>
-        <tr className='ProductCategoryRow'>
-          <th colSpan='2'>Sporting Goods</th>
+//This is a component that is similar to the example code. This component relies on the JSON object PRODUCTS to be
+//sorted by category.
+/*
+const ProductTable = ({products, filterText, inStockOnly}) => {
+  let rows = [];
+  let lastCategory = null;
+
+  products.forEach((prod) => {
+    if (prod.name.indexOf(filterText) === -1 || (inStockOnly && !prod.stocked)) {
+      return;
+    }
+    if (prod.category !== lastCategory) {
+      rows = [...rows,
+        <ProductCategoryRow
+          category={prod.category}
+          key={prod.category}/>];
+    }
+    rows = [...rows,
+      <ProductRow
+        product={prod}
+        key={prod.name}/>];
+    lastCategory = prod.category;
+  });
+
+  return (
+    <table className='ProductTable'>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Price</th>
         </tr>
-        {sportingGoodsRows}
-        <tr className='ProductCategoryRow'>
-          <th colSpan='2'>Electronics</th>
-        </tr>
-        {electronicsRows}
-      </tbody>
-      </table>
-    )
-  }
+      </thead>
+      <tbody>{rows}</tbody>
+    </table>
+  )
 }
 */
 
 
 
 
-//INSPECT LIMITATIONS WITH LARGE COMPONENT ABOVE BEFORE SETTING PROJECT ASIDE UNTIL LATER STYLING AND POSSIBLE FEATURE
-//ADDITION'.
+
+
+//STYLE AND POSSIBLY ADD FEATURES
